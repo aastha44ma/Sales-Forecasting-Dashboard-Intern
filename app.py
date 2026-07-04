@@ -54,6 +54,7 @@ if page == "Sales Overview":
     monthly_trend = filtered_df.groupby('Month')['Sales'].sum()
     st.line_chart(monthly_trend)
 
+
 # ==========================================
 # PAGE 2: FORECAST EXPLORER
 # ==========================================
@@ -74,13 +75,15 @@ elif page == "Forecast Explorer":
     
     if st.button("Generate Forecast"):
         with st.spinner('Training Prophet Model...'):
-            monthly_sales = segment_df.groupby(pd.Grouper(key='Order Date', freq='M'))['Sales'].sum().reset_index()
+            # FIX 1: Changed freq='M' to freq='ME'
+            monthly_sales = segment_df.groupby(pd.Grouper(key='Order Date', freq='ME'))['Sales'].sum().reset_index()
             prophet_df = monthly_sales.rename(columns={'Order Date': 'ds', 'Sales': 'y'})
             
             model = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False)
             model.fit(prophet_df)
             
-            future = model.make_future_dataframe(periods=horizon, freq='M')
+            # FIX 2: Changed freq='M' to freq='ME'
+            future = model.make_future_dataframe(periods=horizon, freq='ME')
             forecast = model.predict(future)
             
             fig = model.plot(forecast)
@@ -88,7 +91,6 @@ elif page == "Forecast Explorer":
             
             st.subheader("Forecast Output")
             st.dataframe(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(horizon))
-
 # ==========================================
 # PAGE 3: ANOMALY REPORT
 # ==========================================
